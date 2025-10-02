@@ -50,6 +50,10 @@ To add BetterDiscordAutoInstaller to your startup apps: `python startup_manager.
 ### MacOS
 You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos?tab=readme-ov-file#setup-and-dependencies) README.md
 
+## Configuration
+
+Once run for the first time, a file `settings.json` will be created in the terminals working directory. You can modify this file to alter the installers behavior, such as changing where the installer will look for Discords install path, toggle automatic updates & switch to the BetterDiscord ci (development) branch
+
 ## Building
 
 ### Windows

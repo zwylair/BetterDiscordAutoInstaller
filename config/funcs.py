@@ -29,6 +29,7 @@ def load_settings():
         config.USE_BD_CI_RELEASES = settings.get("use_betterdiscord_ci_releases", config.USE_BD_CI_RELEASES)
         config.WORKFLOW_RUNS_LIMIT = settings.get("workflow_runs_limit", config.WORKFLOW_RUNS_LIMIT)
         config.RERUN_DISCORD_EDITION = settings.get("rerun_discord_edition", config.RERUN_DISCORD_EDITION)
+        config.INSTALL_PLUGINS = settings.get("install_plugins", config.INSTALL_PLUGINS)
 
         # BD & Discord cached data
         config.DISABLE_DISCORD_VERSION_CHECKING = settings.get("disable_version_check", config.DISABLE_DISCORD_VERSION_CHECKING)
@@ -52,6 +53,7 @@ def dump_settings():
                 "use_betterdiscord_ci_releases": config.USE_BD_CI_RELEASES,
                 "workflow_runs_limit": config.WORKFLOW_RUNS_LIMIT,
                 "rerun_discord_edition": config.RERUN_DISCORD_EDITION,
+                "install_plugins": config.INSTALL_PLUGINS,
 
                 # BD & Discord cached data
                 "disable_version_check": config.DISABLE_DISCORD_VERSION_CHECKING,

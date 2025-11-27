@@ -114,9 +114,7 @@ def main():
                 logger.info(f"Restarting {discord_edition}...")
                 utils.start_discord(discord_edition, discord_parent_path)
 
-            plugins_list = [
-                plugins.PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
-            ]
+            plugins_list = [plugins.PluginInfo.from_url(plugin) for plugin in config.INSTALL_PLUGINS]
 
             logger.info("")
             for plugin_info in plugins_list:

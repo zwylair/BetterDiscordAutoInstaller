@@ -1,6 +1,8 @@
 import os
 import glob
+import hashlib
 import logging
+import time
 
 import requests
 
@@ -42,6 +44,62 @@ def is_bd_injected(discord_path: str, is_ci: bool) -> bool:
     return f'require("{get_asar_path(is_ci)}");' in content
 
 
+def _fetch_bd_stable_digest() -> str | None:
+    """GET latest BetterDiscord.asar checksum"""
+    try:
+        resp = requests.get(config.BD_RELEASE_API_URL, timeout=5)
+        resp.raise_for_status()
+        assets = resp.json().get("assets", [])
+        for asset in assets:
+            if asset.get("name") == "betterdiscord.asar":
+                digest = asset.get("digest", "")
+                if digest.startswith("sha256:"):
+                    return digest[len("sha256:"):]
+        logger.error("betterdiscord.asar asset or digest not found in release API response.")
+    except Exception as e:
+        logger.error(f"Failed to fetch release digest: {e}")
+    return None
+
+
+def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
+    expected_digest = _fetch_bd_stable_digest() # Get .asar checksum
+
+    # Fail if unable to get checksum
+    if not expected_digest:
+        return False
+
+    tmp_path = dest_path + ".tmp"
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"Downloading BetterDiscord Stable asar (attempt {attempt}/{max_retries})...")
+            response = requests.get(config.BD_ASAR_URL, timeout=30)
+            response.raise_for_status()
+
+            # Compile and compare checksum
+            actual_digest = hashlib.sha256(response.content).hexdigest()
+            if actual_digest != expected_digest:
+                raise requests.exceptions.RequestException(
+                    f"SHA256 mismatch (attempt {attempt}): expected {expected_digest}, got {actual_digest}"
+                )
+
+            # Write to .tmp then swap to dest_path so the used .asar is never left half written
+            # that would cause Discord to crash on startup
+            with open(tmp_path, "wb") as f:
+                f.write(response.content)
+            os.replace(tmp_path, dest_path)
+            logger.info("BetterDiscord Stable asar downloaded and verified successfully.")
+            return True
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Download error (attempt {attempt}): {e}")
+            if attempt < max_retries:
+                time.sleep(2 ** (attempt - 1))
+
+    logger.error(f"Failed to download BetterDiscord Stable asar after {max_retries} attempts.")
+    return False
+
+
 def update_bd_asar_only(is_ci: bool):
     if is_ci:
         if update_bd_ci_asar():
@@ -53,15 +111,9 @@ def update_bd_asar_only(is_ci: bool):
 
     os.makedirs(os.path.dirname(config.BD_ASAR_PATH), exist_ok=True)
 
-    try:
-        logger.info("Downloading BetterDiscord Stable asar...")
-        response = requests.get(config.BD_ASAR_URL)
-        with open(config.BD_ASAR_PATH, "wb") as f:
-            f.write(response.content)
-        logger.info("BetterDiscord Stable asar downloaded successfully.")
-
-    except requests.exceptions.ConnectionError:
-        logger.error("Failed to download BetterDiscord Stable asar.")
+    if not _download_bd_stable_asar(config.BD_ASAR_PATH):
+        logger.error("BetterDiscord Stable asar update failed.")
+        return
 
     config.LAST_INSTALLED_BD_VERSION = fetch_latest_bd_release()
     config.dump_settings()

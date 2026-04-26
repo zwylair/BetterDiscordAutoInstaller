@@ -14,6 +14,7 @@ SETTINGS_PATH = "settings.json" if "PYCHARM_HOSTED" in os.environ else "../setti
 GITHUB_TOKEN_FILE_PATH = "github_token" if "PYCHARM_HOSTED" in os.environ else "../github_token"
 
 BD_LATEST_RELEASE_PAGE_URL = "https://github.com/rauenzi/BetterDiscordApp/releases/latest"
+BD_RELEASE_API_URL = "https://api.github.com/repos/rauenzi/BetterDiscordApp/releases/latest"
 BD_ASAR_URL = "https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar"
 BD_ASAR_PATH = os.path.join(APPDATA, "BetterDiscord", "data", "betterdiscord.asar")
 BD_CI_ASAR_PATH = os.path.join(APPDATA, "BetterDiscord", "data", "betterdiscord-ci.asar")

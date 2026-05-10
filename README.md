@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-    <img src="https://img.shields.io/badge/python-3.13-green?logo=python&logoColor=white&style=for-the-badge">
+    <img src="https://img.shields.io/badge/python-3.14-green?logo=python&logoColor=white&style=for-the-badge">
     <img src="https://img.shields.io/badge/LICENSE-MIT-green?style=for-the-badge">
     <img src="https://img.shields.io/github/languages/code-size/Zwylair/BetterDiscordAutoInstaller?style=for-the-badge">
 </p>
@@ -41,11 +41,12 @@ has been released).
 ## Setup and Dependencies
 
 ### Windows
-- Clone the repository: `git clone https://github.com/Zwylair/BetterDiscordAutoInstaller.git`
-- Install the dependencies: `python -m pip install -r requirements.txt`
-- Run the script: `python main.py`
+- Clone repo: `git clone https://github.com/Zwylair/BetterDiscordAutoInstaller.git`
+- Install uv: `py -V:3.14 -m pip install uv`
+- Setup environment: `uv venv .venv --python 3.14`
+- Install dependencies: `uv sync`
 
-To add BetterDiscordAutoInstaller to your startup apps: `python startup_manager.py`
+To add BetterDiscordAutoInstaller to your startup apps: `py -V:3.14 startup_manager.py`
 
 ### MacOS
 You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos?tab=readme-ov-file#setup-and-dependencies) README.md
@@ -53,24 +54,14 @@ You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/t
 ## Building
 
 ### Windows
-- Clone the repository: `git clone https://github.com/Zwylair/BetterDiscordAutoInstaller.git`
-- Install the dependencies: `python -m pip install -r requirements.txt`
-- Run the build script: `python setup.py build`
+- [Install all dependencies](https://github.com/Zwylair/BetterDiscordAutoInstaller#windows)
+- Run build script: `uv run python setup.py build`
 
 ## Contributing
 I will be grateful for any contribution and help given to improve the quality of the project :)
 
-_(especially about adapting the project to other platforms like linux, etc. :3)_
-
-### macOS
-There is redundant/repetitive code which is seen both in manual-installer-mac.py and auto-installer-mac.py. 
-
-That can be fixed. Just need to make sure to have 2 separate files to allow for auto, manual install, and auto/manual-mixed functionalities. 
-
 ### Fork
 Well, just fork it
-
-**But please, don't forget to mention original project in your README**
 
 ## License
 This project is under the [MIT license](./LICENSE).

@@ -1,5 +1,0 @@
-psutil~=5.9.7
-requests~=2.32.3
-winshell~=0.6
-pypiwin32==223
-cx-freeze

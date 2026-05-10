@@ -1,0 +1,16 @@
+[project]
+name = "betterdiscordautoinstaller"
+version = "1.5.0"
+requires-python = ">=3.14"
+dependencies = [
+    "psutil>=7.2.2",
+    "requests>=2.33.1",
+    "winshell>=0.6",
+    "pywin32>=306",
+]
+
+[dependency-groups]
+build = ["cx-freeze"]
+
+[tool.uv]
+package = false

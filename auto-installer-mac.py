@@ -32,18 +32,32 @@ def notify(title, text):
 
 
 def get_path_for_current_discord_version(DISCORD_PARENT_PATH: str) -> str:
-    discord_path = [
-        i for i in os.listdir(DISCORD_PARENT_PATH) if i.replace(".", "").isdigit()
+    def version_key(name: str):
+        ver = name.replace("app-", "")
+        return [int(x) for x in ver.split(".") if x.isdigit()]
+
+    app_dirs = [
+        i for i in os.listdir(DISCORD_PARENT_PATH)
+        if i.startswith("app-") and i.replace("app-", "").replace(".", "").isdigit()
     ]
-    discord_path.sort()
-    latest_installed_discord_version = discord_path[-1]
+    app_dirs.sort(key=version_key)
+    latest_installed_discord_version = app_dirs[-1]
     discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
     return discord_path
 
 
 def set_discord_index_js_path(discord_path: str) -> str:
-    index_js_path = os.path.join(discord_path, "modules/discord_desktop_core/index.js")
-    return index_js_path
+    import glob
+    # discord_desktop_core may be nested (e.g. discord_desktop_core-1/discord_desktop_core)
+    matches = glob.glob(
+        os.path.join(discord_path, "modules", "discord_desktop_core*", "**", "index.js"),
+        recursive=True,
+    )
+    matches = [m for m in matches if m.endswith(os.path.join("discord_desktop_core", "index.js"))]
+    if matches:
+        return matches[0]
+    # fallback to legacy layout
+    return os.path.join(discord_path, "modules/discord_desktop_core/index.js")
 
 
 def patch_discord_index_js(discord_index_js_path: str, bd_asar_save_path: str) -> None:
@@ -65,6 +79,7 @@ def download_betterdiscord_asar(asar_url: str, bd_asar_save_path: str) -> None:
 
     logger.info("Updating local BetterDiscord asar file with latest...")
     try:
+        os.makedirs(os.path.dirname(bd_asar_save_path), exist_ok=True)
         with open(bd_asar_save_path, "wb") as file:
             logger.info(f"Saving to: {bd_asar_save_path}")
             file.write(response.content)

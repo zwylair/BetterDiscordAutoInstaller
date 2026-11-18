@@ -19,4 +19,4 @@ LAST_INSTALLED_DISCORD_PTB_VERSION: Optional[str] = None
 LAST_INSTALLED_BD_VERSION: Optional[str] = None
 LAST_INSTALLED_BD_CI_VERSION: Optional[str] = None
 
-INSTALL_PLUGINS: list[str] = ["https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js"]
+INSTALL_PLUGINS: list[str] = []

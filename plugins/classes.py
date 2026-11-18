@@ -19,7 +19,7 @@ class PluginInfo:
 
     def get_name(self) -> str:
         if self._name is None:
-            self._name = self.url.split("/")[-1].rstrip(".plugin.js")
+            self._name = self.url.split("/")[-1].removesuffix(".plugin.js")
         return self._name
 
     def is_installed(self) -> bool:

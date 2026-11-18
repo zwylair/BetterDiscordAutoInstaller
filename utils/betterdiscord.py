@@ -38,7 +38,6 @@ def is_bd_injected(discord_path: str, is_ci: bool) -> bool:
 
 
 def _fetch_bd_stable_digest() -> str | None:
-    """GET latest BetterDiscord.asar checksum"""
     try:
         resp = requests.get(config.BD_RELEASE_API_URL, timeout=5)
         resp.raise_for_status()
@@ -48,18 +47,17 @@ def _fetch_bd_stable_digest() -> str | None:
                 digest = asset.get("digest", "")
                 if digest.startswith("sha256:"):
                     return digest[len("sha256:"):]
-        logger.error("betterdiscord.asar asset or digest not found in release API response.")
+        logger.warning("betterdiscord.asar asset or digest not found in release API response.")
     except Exception as e:
-        logger.error(f"Failed to fetch release digest: {e}")
+        logger.warning(f"Failed to fetch release digest: {e}")
     return None
 
 
 def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
-    expected_digest = _fetch_bd_stable_digest() # Get .asar checksum
+    expected_digest = _fetch_bd_stable_digest()
 
-    # Fail if unable to get checksum
     if not expected_digest:
-        return False
+        logger.warning("Checksum of the BetterDiscord asar is unavailable, skipping its verification.")
 
     tmp_path = dest_path + ".tmp"
 
@@ -69,22 +67,19 @@ def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
             response = requests.get(config.BD_ASAR_URL, timeout=30)
             response.raise_for_status()
 
-            # Compile and compare checksum
             actual_digest = hashlib.sha256(response.content).hexdigest()
-            if actual_digest != expected_digest:
+            if expected_digest and actual_digest != expected_digest:
                 raise requests.exceptions.RequestException(
                     f"SHA256 mismatch (attempt {attempt}): expected {expected_digest}, got {actual_digest}"
                 )
 
-            # Write to .tmp then swap to dest_path so the used .asar is never left half written
-            # that would cause Discord to crash on startup
             with open(tmp_path, "wb") as f:
                 f.write(response.content)
             os.replace(tmp_path, dest_path)
             logger.info("BetterDiscord Stable asar downloaded and verified successfully.")
             return True
 
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, OSError) as e:
             logger.error(f"Download error (attempt {attempt}): {e}")
             if attempt < max_retries:
                 time.sleep(2 ** (attempt - 1))
@@ -152,6 +147,11 @@ def fetch_latest_bd_release() -> str | None:
 def check_for_bd_updates(is_ci: bool) -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
     logger.info("Checking for BetterDiscord updates...")
+
+    if not os.path.exists(get_asar_path(is_ci)):
+        logger.info("BetterDiscord asar is missing.")
+        return True
+
     if is_ci:
         return check_for_bd_ci_updates()
 

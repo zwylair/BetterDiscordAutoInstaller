@@ -206,11 +206,15 @@ def main():
         download_file(update_package_url, save_path)
         logger.info("Downloaded.")
 
-    update_package = zipfile.ZipFile(save_path)
+    try:
+        update_package = zipfile.ZipFile(save_path)
+    except (zipfile.BadZipFile, OSError) as e:
+        logger.error(f"Cannot open the update package ({save_path}): {e}. The installed version is left untouched.")
+        sys.exit(1)
 
     if is_frozen and os.path.exists(extract_directory):
         logger.info("Clearing target directory...")
-        clean_folder(extract_directory, exclude_files=("updater.old.exe", "settings.json", os.path.basename(save_path), "updater.log"))
+        clean_folder(extract_directory, exclude_files=("updater.old.exe", "settings.json", "github_token", os.path.basename(save_path), "updater.log"))
 
     logger.info("Unpacking...")
     extract_zip(update_package, extract_directory)
@@ -222,6 +226,11 @@ def main():
         except Exception as e:
             logger.info(f"Cannot delete update package ({save_path}): {e}")
     open(UPDATED_FILENAME, "w").close()
+
+    if not is_frozen:
+        logger.info("Update successfully installed.")
+        run_bdai()
+        sys.exit(0)
 
     logger.info(f"Update successfully installed. Running new updater...")
     subprocess.Popen(

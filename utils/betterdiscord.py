@@ -37,9 +37,13 @@ def is_bd_injected(discord_path: str, is_ci: bool) -> bool:
     return f'require("{get_asar_path(is_ci)}");' in content
 
 
-def _fetch_bd_stable_digest() -> str | None:
+def get_release_api_url(is_ci: bool) -> str:
+    return config.BD_CI_RELEASE_API_URL if is_ci else config.BD_RELEASE_API_URL
+
+
+def fetch_bd_asar_digest(is_ci: bool) -> str | None:
     try:
-        resp = requests.get(config.BD_RELEASE_API_URL, timeout=5)
+        resp = requests.get(get_release_api_url(is_ci), timeout=15)
         resp.raise_for_status()
         assets = resp.json().get("assets", [])
         for asset in assets:
@@ -53,8 +57,9 @@ def _fetch_bd_stable_digest() -> str | None:
     return None
 
 
-def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
-    expected_digest = _fetch_bd_stable_digest()
+def _download_bd_asar(is_ci: bool, expected_digest: str | None, max_retries: int = 3) -> bool:
+    dest_path = config.BD_CI_ASAR_PATH if is_ci else config.BD_ASAR_PATH
+    release_tag = get_release_tag(is_ci)
 
     if not expected_digest:
         logger.warning("Checksum of the BetterDiscord asar is unavailable, skipping its verification.")
@@ -63,8 +68,8 @@ def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
 
     for attempt in range(1, max_retries + 1):
         try:
-            logger.info(f"Downloading BetterDiscord Stable asar (attempt {attempt}/{max_retries})...")
-            response = requests.get(config.BD_ASAR_URL, timeout=30)
+            logger.info(f"Downloading BetterDiscord {release_tag} asar (attempt {attempt}/{max_retries})...")
+            response = requests.get(config.BD_CI_ASAR_URL if is_ci else config.BD_ASAR_URL, timeout=30)
             response.raise_for_status()
 
             actual_digest = hashlib.sha256(response.content).hexdigest()
@@ -76,7 +81,7 @@ def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
             with open(tmp_path, "wb") as f:
                 f.write(response.content)
             os.replace(tmp_path, dest_path)
-            logger.info("BetterDiscord Stable asar downloaded and verified successfully.")
+            logger.info(f"BetterDiscord {release_tag} asar downloaded and verified successfully.")
             return True
 
         except (requests.exceptions.RequestException, OSError) as e:
@@ -84,23 +89,22 @@ def _download_bd_stable_asar(dest_path: str, max_retries: int = 3) -> bool:
             if attempt < max_retries:
                 time.sleep(2 ** (attempt - 1))
 
-    logger.error(f"Failed to download BetterDiscord Stable asar after {max_retries} attempts.")
+    logger.error(f"Failed to download BetterDiscord {release_tag} asar after {max_retries} attempts.")
     return False
 
 
 def update_bd_asar_only(is_ci: bool):
-    if is_ci:
-        if update_bd_ci_asar():
-            logger.info("BetterDiscord CI has been updated successfully.")
-            return
+    os.makedirs(os.path.dirname(config.BD_CI_ASAR_PATH if is_ci else config.BD_ASAR_PATH), exist_ok=True)
+    expected_digest = fetch_bd_asar_digest(is_ci)
 
-        logger.info("BetterDiscord CI update failed.")
+    if not _download_bd_asar(is_ci, expected_digest):
+        logger.error(f"BetterDiscord {get_release_tag(is_ci)} asar update failed.")
         return
 
-    os.makedirs(os.path.dirname(config.BD_ASAR_PATH), exist_ok=True)
-
-    if not _download_bd_stable_asar(config.BD_ASAR_PATH):
-        logger.error("BetterDiscord Stable asar update failed.")
+    if is_ci:
+        if expected_digest:
+            config.LAST_INSTALLED_BD_CI_VERSION = expected_digest
+            config.dump_settings()
         return
 
     latest_release = fetch_latest_bd_release()
@@ -161,31 +165,5 @@ def check_for_bd_updates(is_ci: bool) -> bool:
 
 def check_for_bd_ci_updates() -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
-    release_meta = utils.get_artifacts_from_successful_run(
-        config.BD_CI_WORKFLOWS_RUNS_URL,
-        config.BD_CI_WORKFLOW_REPO,
-        config.BD_CI_WORKFLOW_AUTHOR
-    )
-    return release_meta is not None and release_meta.run_id != config.LAST_INSTALLED_BD_CI_VERSION
-
-
-def update_bd_ci_asar() -> bool:
-    """Updates BD CI and returns False if there is any error, True otherwise"""
-
-    release_meta = utils.get_artifacts_from_successful_run(config.BD_CI_WORKFLOWS_RUNS_URL, config.BD_CI_WORKFLOW_REPO, config.BD_CI_WORKFLOW_AUTHOR)
-    if not release_meta:
-        logger.info(f"Failed to fetch BetterDiscord CI artifacts from workflow run.")
-        return False
-
-    artifact = utils.find_artefact(release_meta.artifacts)
-    if not artifact:
-        logger.info(f"Failed to find BetterDiscord CI artifact ({release_meta.run_id}).")
-        return False
-
-    success = utils.download_artifact(artifact)
-    if not success:
-        return False
-
-    config.LAST_INSTALLED_BD_CI_VERSION = release_meta.run_id
-    config.dump_settings()
-    return True
+    latest_digest = fetch_bd_asar_digest(True)
+    return latest_digest is not None and latest_digest != config.LAST_INSTALLED_BD_CI_VERSION

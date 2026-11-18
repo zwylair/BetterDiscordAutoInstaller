@@ -22,10 +22,9 @@ Currently, BetterDiscordAutoInstaller is supported for **[Windows](https://githu
 
 ### BetterDiscord CI
 
-It is also possible to use [BetterDiscord CI Releases](https://github.com/BetterDiscord/BetterDiscord/actions/workflows/ci.yml).
-You need to get a [GitHub Access Token](https://github.com/settings/personal-access-tokens/new)
-with access to the public repos and change the `use_betterdiscord_ci_releases` option to `true` in
-the `settings.json` file. If you have not entered a token before, BDAI will show the prompt for you.
+It is also possible to use the [BetterDiscord Canary release](https://github.com/BetterDiscord/BetterDiscord/releases/tag/canary),
+which is built from every commit to the development branch. Change the `use_betterdiscord_ci_releases` option to `true` in
+the `settings.json` file.
 
 ### Autostart
 

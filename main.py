@@ -13,7 +13,6 @@ logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 def main():
     config.load_settings()
-    config.load_github_token()
 
     logger.info(f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}")
 

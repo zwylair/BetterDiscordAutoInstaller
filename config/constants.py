@@ -20,7 +20,6 @@ else:
     BDAI_ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SETTINGS_PATH = os.path.join(BDAI_ROOT_PATH, "settings.json")
-GITHUB_TOKEN_FILE_PATH = os.path.join(BDAI_ROOT_PATH, "github_token")
 
 DISCORD_UPDATE_WAIT_TIMEOUT = 300
 DISCORD_UPDATER_LOG_IDLE_TIMEOUT = 30
@@ -30,9 +29,8 @@ BD_RELEASE_API_URL = "https://api.github.com/repos/rauenzi/BetterDiscordApp/rele
 BD_ASAR_URL = "https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar"
 BD_ASAR_PATH = os.path.join(APPDATA, "BetterDiscord", "data", "betterdiscord.asar")
 BD_CI_ASAR_PATH = os.path.join(APPDATA, "BetterDiscord", "data", "betterdiscord-ci.asar")
-BD_CI_WORKFLOW_AUTHOR = "BetterDiscord CI"
-BD_CI_WORKFLOW_REPO = "BetterDiscord/BetterDiscord"
-BD_CI_WORKFLOWS_RUNS_URL = f"https://api.github.com/repos/{BD_CI_WORKFLOW_REPO}/actions/workflows/ci.yml/runs"
+BD_CI_RELEASE_API_URL = "https://api.github.com/repos/BetterDiscord/BetterDiscord/releases/tags/canary"
+BD_CI_ASAR_URL = "https://github.com/BetterDiscord/BetterDiscord/releases/download/canary/betterdiscord.asar"
 
 DISCORD_PARENT_PATH_SETTING_KEYS = {
     config.DiscordEdition.STABLE: "discord_installed_path",

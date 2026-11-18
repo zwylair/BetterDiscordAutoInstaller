@@ -5,8 +5,6 @@ import config
 DISABLE_DISCORD_VERSION_CHECKING: bool = False
 DISABLE_BDAI_AUTOUPDATE: bool = False
 USE_BD_CI_RELEASES: bool = False
-GITHUB_TOKEN: Optional[str] = None
-WORKFLOW_RUNS_LIMIT: int = 5
 RERUN_DISCORD_EDITION: Optional[str] = config.DiscordEdition.STABLE.to_str()
 
 DISCORD_PARENT_PATHS: dict[config.DiscordEdition, Optional[str]] = {edition: None for edition in config.DiscordEdition}

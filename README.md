@@ -32,6 +32,17 @@ the `settings.json` file. If you have not entered a token before, BDAI will show
 BDAI also allows you to add/remove it from autostart, without having to run it manually  every time.
 For macOS, the user can also choose to bind script to a keyboard shortcut to manually update.
 
+### Plugins
+
+BDAI can download BetterDiscord plugins for you. List their direct links in the `install_plugins` setting of
+`settings.json` (empty by default), e.g. `"install_plugins": ["https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js"]`.
+Already installed plugins are not overwritten.
+
+### Restarting Discord
+
+BDAI restarts every Discord edition it had to close. The edition set in `rerun_discord_edition` (Stable by default)
+is started even if it was not running.
+
 ### Self update checks
 
 BDAI will check if it is up to date. You can disable autoupdate by changing the `disable_bdai_autoupdate`
@@ -55,7 +66,7 @@ You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/t
 
 ### Windows
 - [Install all dependencies](https://github.com/Zwylair/BetterDiscordAutoInstaller#windows)
-- Run build script: `uv run python setup.py build`
+- Run build script: `uv run --group build python setup.py build`
 
 ## Contributing
 I will be grateful for any contribution and help given to improve the quality of the project :)

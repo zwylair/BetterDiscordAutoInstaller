@@ -1,5 +1,4 @@
 import os
-import glob
 import hashlib
 import logging
 import time
@@ -26,16 +25,10 @@ def get_release_tag(is_ci: bool) -> str:
 
 
 def is_bd_injected(discord_path: str, is_ci: bool) -> bool:
-    core_path_pattern = os.path.join(discord_path, "modules/discord_desktop_core-*/discord_desktop_core")
-    core_paths = glob.glob(core_path_pattern)
+    index_js_path = utils.find_core_index_path(discord_path)
 
-    if not core_paths:
-        logger.warning("Discord core path not found when checking BetterDiscord injection.")
-        return False
-
-    index_js_path = os.path.join(core_paths[0], "index.js")
-    if not os.path.exists(index_js_path):
-        logger.warning("Discord index.js not found.")
+    if not index_js_path:
+        logger.warning("Discord index.js not found when checking BetterDiscord injection.")
         return False
 
     with open(index_js_path, "r", encoding="utf-8") as f:
@@ -120,13 +113,10 @@ def update_bd_asar_only(is_ci: bool):
 
 
 def inject_patch(discord_path: str, is_ci: bool):
-    core_path_pattern = os.path.join(discord_path, "modules/discord_desktop_core-*/discord_desktop_core")
-    core_paths = glob.glob(core_path_pattern)
+    index_js_path = utils.find_core_index_path(discord_path)
 
-    if not core_paths:
-        raise FileNotFoundError(f"No matching discord_desktop_core-* folder found in: {discord_path}")
-
-    index_js_path = os.path.join(core_paths[0], "index.js")
+    if not index_js_path:
+        raise FileNotFoundError(f"Discord index.js not found in: {discord_path}")
 
     with open(index_js_path, "r", encoding="utf-8") as f:
         content = f.readlines()

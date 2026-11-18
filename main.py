@@ -72,19 +72,30 @@ def main():
             logger.info("")
 
             # wipe logs, because discord doesn't do that after every updater run
-            with open(utils.get_log_file_path(discord_edition), "w") as f:
-                f.write("")
+            try:
+                with open(utils.get_log_file_path(discord_edition), "w") as f:
+                    f.write("")
+            except OSError as e:
+                logger.warning(f"Cannot wipe {discord_edition} updater log: {e}")
 
             logger.info(f"{discord_edition} is not running. Starting updater.")
             utils.start_discord(discord_edition, discord_parent_path)
             time.sleep(1)
 
             logger.info(f"Waiting for end of {discord_edition} updating.")
-            while utils.is_discord_updating(discord_edition):
+            wait_deadline = time.monotonic() + config.DISCORD_UPDATE_WAIT_TIMEOUT
+            while utils.is_discord_updating(discord_edition, discord_parent_path):
+                if time.monotonic() > wait_deadline:
+                    logger.warning(f"Updating of {discord_edition} takes too long. Continuing anyway.")
+                    break
                 time.sleep(0.5)
 
         discord_core_folder = utils.get_latest_installed_discord_folder_name(discord_parent_path)
         discord_path = os.path.join(discord_parent_path, discord_core_folder)
+
+        if not utils.find_core_index_path(discord_path):
+            logger.error(f"{discord_edition} is not ready: discord_desktop_core is not installed yet. Skipping it.")
+            continue
 
         is_last_patch_is_up_to_date = discord_core_folder == config.get_last_installed_discord_version(discord_edition)
         is_bd_injected_already = utils.is_bd_injected(discord_path, config.USE_BD_CI_RELEASES)

@@ -103,6 +103,18 @@ def set_discord_version(edition: config.DiscordEdition, new_version: str):
             pass
 
 
+def set_discord_parent_path(edition: config.DiscordEdition, path: Optional[str]):
+    match edition:
+        case config.DiscordEdition.STABLE:
+            config.DISCORD_PARENT_PATH = path
+        case config.DiscordEdition.CANARY:
+            config.DISCORD_CANARY_PARENT_PATH = path
+        case config.DiscordEdition.PTB:
+            config.DISCORD_PTB_PARENT_PATH = path
+        case _:
+            pass
+
+
 def get_last_installed_discord_version(edition: config.DiscordEdition) -> Optional[str]:
     match edition:
         case config.DiscordEdition.STABLE:

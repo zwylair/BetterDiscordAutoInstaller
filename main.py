@@ -27,21 +27,34 @@ def main():
         config.DiscordEdition.PTB: config.DISCORD_PTB_PARENT_PATH
     }
 
-    for edition, discord_parent_path in all_discord_paths.items():
+    found_new_paths = False
+
+    for edition in all_discord_paths:
         logger.info(f"Retrieving {edition} installation folder...")
 
-        if discord_parent_path:
-            break
-    else:
+        if not all_discord_paths[edition]:
+            all_discord_paths[edition] = utils.find_discord_path(edition)
+            config.set_discord_parent_path(edition, all_discord_paths[edition])
+            found_new_paths = found_new_paths or bool(all_discord_paths[edition])
+
+    if not any(all_discord_paths.values()):
         logger.error("No any valid Discord installation found.")
         logger.info("Enter the path to your Discord Stable installation")
 
-        config.DISCORD_PARENT_PATH = input(">>> ").strip()
+        try:
+            config.DISCORD_PARENT_PATH = input(">>> ").strip()
+        except EOFError:
+            logger.error(f"Cannot ask for the path without a console. Set it in {config.SETTINGS_PATH}")
+            sys.exit(1)
+
         if not os.path.exists(config.DISCORD_PARENT_PATH):
             logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
             sys.exit(1)
 
         all_discord_paths[config.DiscordEdition.STABLE] = config.DISCORD_PARENT_PATH
+        found_new_paths = True
+
+    if found_new_paths or not os.path.exists(config.SETTINGS_PATH):
         config.dump_settings()
 
     bd_release_tag = utils.get_release_tag(config.USE_BD_CI_RELEASES)

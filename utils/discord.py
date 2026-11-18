@@ -1,4 +1,7 @@
 import os
+import re
+import glob
+import time
 import logging
 import subprocess
 
@@ -16,7 +19,7 @@ def get_log_file_path(edition: config.DiscordEdition) -> str:
 
 def find_discord_path(edition: config.DiscordEdition) -> str | None:
     for path in config.DISCORD_POSSIBLE_PATHS.get(edition):
-        if os.path.exists(path):
+        if os.path.exists(path) and any(i.startswith("app-") for i in os.listdir(path)):
             return path
     return None
 
@@ -25,11 +28,11 @@ def get_latest_installed_discord_folder_name(discord_parent_path: str) -> str:
     if not os.path.exists(discord_parent_path):
         raise FileNotFoundError(f"Discord directory not found: {discord_parent_path}")
 
-    discord_versions = [i for i in os.listdir(discord_parent_path) if i.startswith("app-")]
+    discord_versions = [i for i in os.listdir(discord_parent_path) if re.fullmatch(r"app-\d+(\.\d+)*", i)]
     if not discord_versions:
         raise FileNotFoundError(f"No 'app-*' folders found in: {discord_parent_path}")
 
-    discord_versions.sort()
+    discord_versions.sort(key=lambda i: [int(n) for n in re.findall(r"\d+", i)])
     return discord_versions[-1]
 
 

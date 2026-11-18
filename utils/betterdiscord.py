@@ -108,8 +108,10 @@ def update_bd_asar_only(is_ci: bool):
         logger.error("BetterDiscord Stable asar update failed.")
         return
 
-    config.LAST_INSTALLED_BD_VERSION = fetch_latest_bd_release()
-    config.dump_settings()
+    latest_release = fetch_latest_bd_release()
+    if latest_release:
+        config.LAST_INSTALLED_BD_VERSION = latest_release
+        config.dump_settings()
 
 
 def inject_patch(discord_path: str, is_ci: bool):
@@ -142,25 +144,29 @@ def inject_patch(discord_path: str, is_ci: bool):
     logger.info(f"Patched {index_js_path} to include BetterDiscord {release_tag}.")
 
 
-def fetch_latest_bd_release() -> str:
+def fetch_latest_bd_release() -> str | None:
     logger.info("Fetching latest BetterDiscord Stable version.")
-    latest_release_url = requests.head(config.BD_LATEST_RELEASE_PAGE_URL, allow_redirects=True)
-    return latest_release_url.url.split("/")[-1]
+    return utils.fetch_latest_release_tag(config.BD_LATEST_RELEASE_PAGE_URL)
 
 
 def check_for_bd_updates(is_ci: bool) -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
     logger.info("Checking for BetterDiscord updates...")
-    return check_for_bd_ci_updates() if is_ci else fetch_latest_bd_release() != config.LAST_INSTALLED_BD_VERSION
+    if is_ci:
+        return check_for_bd_ci_updates()
+
+    latest_release = fetch_latest_bd_release()
+    return latest_release is not None and latest_release != config.LAST_INSTALLED_BD_VERSION
 
 
 def check_for_bd_ci_updates() -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
-    return utils.get_artifacts_from_successful_run(
+    release_meta = utils.get_artifacts_from_successful_run(
         config.BD_CI_WORKFLOWS_RUNS_URL,
         config.BD_CI_WORKFLOW_REPO,
         config.BD_CI_WORKFLOW_AUTHOR
-    ).run_id != config.LAST_INSTALLED_BD_CI_VERSION
+    )
+    return release_meta is not None and release_meta.run_id != config.LAST_INSTALLED_BD_CI_VERSION
 
 
 def update_bd_ci_asar() -> bool:

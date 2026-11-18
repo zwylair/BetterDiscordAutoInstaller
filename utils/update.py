@@ -35,11 +35,24 @@ def is_version_greater(first_version: str, second_version: str) -> bool:
     return False
 
 
+def fetch_latest_release_tag(latest_release_page_url: str) -> str | None:
+    try:
+        latest_release_url = requests.head(latest_release_page_url, allow_redirects=True, timeout=15)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch the latest release of {latest_release_page_url}: {e}")
+        return None
+    return latest_release_url.url.split("/")[-1]
+
+
 def check_for_bdai_updates() -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
 
-    latest_release_url = requests.head(config.BDAI_LATEST_RELEASE_PAGE_URL, allow_redirects=True)
-    latest_available_version = latest_release_url.url.split("/")[-1].lstrip("v")
+    latest_tag = fetch_latest_release_tag(config.BDAI_LATEST_RELEASE_PAGE_URL)
+
+    if latest_tag is None:
+        return False
+
+    latest_available_version = latest_tag.lstrip("v")
 
     if is_version_greater(latest_available_version, config.BDAI_SCRIPT_VERSION):
         logger.info(f"A new version available ({config.BDAI_SCRIPT_VERSION} -> {latest_available_version}).")

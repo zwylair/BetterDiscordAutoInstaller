@@ -8,7 +8,7 @@ import subprocess
 import requests
 
 import config
-from utils import backslash_path, is_version_greater, check_for_bdai_updates
+from utils import backslash_path, is_version_greater, check_for_bdai_updates, fetch_latest_release_tag
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(message)s")
@@ -43,7 +43,7 @@ def get_path_without_parent_dir(file_path: str) -> str:
 
 def download_file(url: str, save_path: str):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=60)
         if response.status_code != 200:
             logger.error(f"Failed to download file from {url}. HTTP status code: {response.status_code}")
             sys.exit(1)
@@ -170,8 +170,17 @@ def main():
             run_bdai()
             sys.exit(0)
 
-    release_url = requests.head(config.BDAI_LATEST_RELEASE_PAGE_URL, allow_redirects=True).url
-    latest_version = release_url.split("/")[-1]
+    latest_version = fetch_latest_release_tag(config.BDAI_LATEST_RELEASE_PAGE_URL)
+
+    if latest_version is None:
+        logger.error("Cannot fetch the latest BDAI version.")
+
+        if force_update_flag:
+            sys.exit(1)
+
+        run_bdai()
+        sys.exit(0)
+
     extract_directory = config.BDAI_ROOT_PATH
 
     if is_frozen:

@@ -20,7 +20,7 @@ def download_plugin(plugin_info: PluginInfo):
     try:
         logger.info(f"Downloading {plugin_info.get_name()}...")
 
-        response = requests.get(plugin_info.url)
+        response = requests.get(plugin_info.url, timeout=30)
         if response.status_code != 200:
             logger.error(f"Failed to download plugin from {plugin_info.url}: {response.status_code}")
             return

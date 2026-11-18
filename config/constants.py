@@ -1,4 +1,5 @@
 import os
+import sys
 
 import config
 
@@ -10,8 +11,16 @@ BDAI_SCRIPT_VERSION = "1.5.0"
 BDAI_LATEST_RELEASE_PAGE_URL = "https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest"
 BDAI_RAW_RELEASE_URL_TEMPLATE = "https://github.com/Zwylair/BetterDiscordAutoInstaller/archive/refs/tags/{tag}.zip"
 BDAI_RELEASE_URL_TEMPLATE = "https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/download/{tag}/BetterDiscordAutoInstaller-{tag}.zip"
-SETTINGS_PATH = "settings.json" if "PYCHARM_HOSTED" in os.environ else "../settings.json"
-GITHUB_TOKEN_FILE_PATH = "github_token" if "PYCHARM_HOSTED" in os.environ else "../github_token"
+if getattr(sys, "frozen", False):
+    BDAI_ROOT_PATH = os.path.dirname(sys.executable)
+
+    if not os.path.basename(sys.executable).lower().startswith("updater"):
+        BDAI_ROOT_PATH = os.path.dirname(BDAI_ROOT_PATH)
+else:
+    BDAI_ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+SETTINGS_PATH = os.path.join(BDAI_ROOT_PATH, "settings.json")
+GITHUB_TOKEN_FILE_PATH = os.path.join(BDAI_ROOT_PATH, "github_token")
 
 BD_LATEST_RELEASE_PAGE_URL = "https://github.com/rauenzi/BetterDiscordApp/releases/latest"
 BD_RELEASE_API_URL = "https://api.github.com/repos/rauenzi/BetterDiscordApp/releases/latest"

@@ -12,7 +12,7 @@ from utils import backslash_path, is_version_greater, check_for_bdai_updates
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(message)s")
-UPDATED_FILENAME = "updated"
+UPDATED_FILENAME = os.path.join(config.BDAI_ROOT_PATH, "updated")
 
 
 def get_log_file_path() -> str:
@@ -98,7 +98,10 @@ def run_bdai():
     logger.info("Running BDAI...")
 
     if getattr(sys, "frozen", False):
-        all_bdai_dirs = [i.lstrip("v") for i in os.listdir() if i.startswith("v") and "main.exe" in os.listdir(i)]
+        all_bdai_dirs = [
+            i.lstrip("v") for i in os.listdir(config.BDAI_ROOT_PATH)
+            if i.startswith("v") and "main.exe" in os.listdir(os.path.join(config.BDAI_ROOT_PATH, i))
+        ]
         greatest_version = "0"
 
         if not all_bdai_dirs:
@@ -110,11 +113,12 @@ def run_bdai():
             if is_version_greater(version, greatest_version):
                 greatest_version = version
 
-        os.chdir("v" + greatest_version)
-        execute_command = ["main.exe"]
+        bdai_dir = os.path.join(config.BDAI_ROOT_PATH, "v" + greatest_version)
+        execute_command = [os.path.join(bdai_dir, "main.exe")]
     else:
-        execute_command = [sys.executable, "main.py"]
-    subprocess.run(execute_command)
+        bdai_dir = config.BDAI_ROOT_PATH
+        execute_command = [sys.executable, os.path.join(bdai_dir, "main.py")]
+    subprocess.run(execute_command, cwd=bdai_dir)
 
 
 def exception_hook(exc_type, exc_value, exc_traceback):
@@ -168,7 +172,7 @@ def main():
 
     release_url = requests.head(config.BDAI_LATEST_RELEASE_PAGE_URL, allow_redirects=True).url
     latest_version = release_url.split("/")[-1]
-    extract_directory = "./"
+    extract_directory = config.BDAI_ROOT_PATH
 
     if is_frozen:
         if not is_this_instance_replica():
@@ -182,10 +186,10 @@ def main():
             )
             sys.exit(0)
 
-        save_path = f"BetterDiscordAutoInstaller-{latest_version}.zip"
+        save_path = os.path.join(config.BDAI_ROOT_PATH, f"BetterDiscordAutoInstaller-{latest_version}.zip")
         update_package_url = config.BDAI_RELEASE_URL_TEMPLATE.format(tag=latest_version)
     else:
-        save_path = f"{latest_version}.zip"
+        save_path = os.path.join(config.BDAI_ROOT_PATH, f"{latest_version}.zip")
         update_package_url = config.BDAI_RAW_RELEASE_URL_TEMPLATE.format(tag=latest_version)
 
     if not skip_download_flag:
@@ -197,7 +201,7 @@ def main():
 
     if is_frozen and os.path.exists(extract_directory):
         logger.info("Clearing target directory...")
-        clean_folder(extract_directory, exclude_files=("updater.old.exe", "settings.json", save_path, "updater.log"))
+        clean_folder(extract_directory, exclude_files=("updater.old.exe", "settings.json", os.path.basename(save_path), "updater.log"))
 
     logger.info("Unpacking...")
     extract_zip(update_package, extract_directory)

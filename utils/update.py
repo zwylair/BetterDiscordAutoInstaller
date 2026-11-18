@@ -56,8 +56,7 @@ def run_updater():
     logger.info("Running updater...")
 
     if getattr(sys, "frozen", False):
-        updater_run_command = ["updater.exe"]
-        os.chdir("../")
+        updater_run_command = [os.path.join(config.BDAI_ROOT_PATH, "updater.exe")]
     else:
-        updater_run_command = [sys.executable, "updater.py"]
-    subprocess.run(updater_run_command)
+        updater_run_command = [sys.executable, os.path.join(config.BDAI_ROOT_PATH, "updater.py")]
+    subprocess.run(updater_run_command, cwd=config.BDAI_ROOT_PATH)

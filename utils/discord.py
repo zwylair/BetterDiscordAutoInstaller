@@ -48,15 +48,20 @@ def find_core_index_path(discord_path: str) -> str | None:
     return None
 
 
-def kill_discord(edition: config.DiscordEdition):
+def kill_discord(edition: config.DiscordEdition) -> bool:
     executable_name = edition.to_str() + ".exe"
+    was_running = False
+
     for process in psutil.process_iter(["name"]):
         if process.info["name"] == executable_name:
+            was_running = True
+
             try:
                 logger.info(f"Killing process: {process.info["name"]} (PID: {process.pid})")
                 process.kill()
             except psutil.NoSuchProcess:
                 pass
+    return was_running
 
 
 def start_discord(edition: config.DiscordEdition, discord_parent_path: str):
@@ -67,9 +72,16 @@ def start_discord(edition: config.DiscordEdition, discord_parent_path: str):
     if not os.path.exists(update_exe):
         raise FileNotFoundError(f"Update.exe not found in: {discord_parent_path}")
 
-    command = f'"{update_exe}" --processStart {executable_name}'
+    command = [update_exe, "--processStart", executable_name]
     logger.info(f"Starting Discord using command: {command}")
-    subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.Popen(
+        command,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+        close_fds=True
+    )
 
 
 def is_discord_running(edition: config.DiscordEdition) -> bool:

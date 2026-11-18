@@ -108,7 +108,7 @@ def main():
         ):
             logger.info("")
             logger.info(f"Killing any running {discord_edition} processes...")
-            utils.kill_discord(discord_edition)
+            was_discord_running = utils.kill_discord(discord_edition)
             time.sleep(2)
 
             logger.info("")
@@ -133,7 +133,7 @@ def main():
                 utils.update_bd_asar_only(config.USE_BD_CI_RELEASES)
                 bd_has_updates = False
 
-            if discord_edition.to_str() == config.RERUN_DISCORD_EDITION:
+            if was_discord_running or discord_edition.to_str() == config.RERUN_DISCORD_EDITION:
                 logger.info("")
                 logger.info(f"Restarting {discord_edition}...")
                 utils.start_discord(discord_edition, discord_parent_path)

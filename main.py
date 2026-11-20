@@ -21,37 +21,29 @@ def main():
     if utils.check_for_bdai_updates() and not config.DISABLE_BDAI_AUTOUPDATE:
         utils.run_updater()
 
-    all_discord_paths = {
-        config.DiscordEdition.STABLE: config.DISCORD_PARENT_PATH,
-        config.DiscordEdition.CANARY: config.DISCORD_CANARY_PARENT_PATH,
-        config.DiscordEdition.PTB: config.DISCORD_PTB_PARENT_PATH
-    }
-
     found_new_paths = False
 
-    for edition in all_discord_paths:
+    for edition in config.DISCORD_PARENT_PATHS:
         logger.info(f"Retrieving {edition} installation folder...")
 
-        if not all_discord_paths[edition]:
-            all_discord_paths[edition] = utils.find_discord_path(edition)
-            config.set_discord_parent_path(edition, all_discord_paths[edition])
-            found_new_paths = found_new_paths or bool(all_discord_paths[edition])
+        if not config.DISCORD_PARENT_PATHS[edition]:
+            config.DISCORD_PARENT_PATHS[edition] = utils.find_discord_path(edition)
+            found_new_paths = found_new_paths or bool(config.DISCORD_PARENT_PATHS[edition])
 
-    if not any(all_discord_paths.values()):
+    if not any(config.DISCORD_PARENT_PATHS.values()):
         logger.error("No any valid Discord installation found.")
         logger.info("Enter the path to your Discord Stable installation")
 
         try:
-            config.DISCORD_PARENT_PATH = input(">>> ").strip()
+            config.DISCORD_PARENT_PATHS[config.DiscordEdition.STABLE] = input(">>> ").strip()
         except EOFError:
             logger.error(f"Cannot ask for the path without a console. Set it in {config.SETTINGS_PATH}")
             sys.exit(1)
 
-        if not os.path.exists(config.DISCORD_PARENT_PATH):
-            logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
+        if not os.path.exists(config.DISCORD_PARENT_PATHS[config.DiscordEdition.STABLE]):
+            logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATHS[config.DiscordEdition.STABLE]}")
             sys.exit(1)
 
-        all_discord_paths[config.DiscordEdition.STABLE] = config.DISCORD_PARENT_PATH
         found_new_paths = True
 
     if found_new_paths or not os.path.exists(config.SETTINGS_PATH):
@@ -61,7 +53,7 @@ def main():
     bd_has_updates = utils.check_for_bd_updates(config.USE_BD_CI_RELEASES)
     force_update_flag = "--force" in sys.argv
 
-    for discord_edition, discord_parent_path in all_discord_paths.items():
+    for discord_edition, discord_parent_path in config.DISCORD_PARENT_PATHS.items():
         if not discord_parent_path:
             continue
 
@@ -97,7 +89,7 @@ def main():
             logger.error(f"{discord_edition} is not ready: discord_desktop_core is not installed yet. Skipping it.")
             continue
 
-        is_last_patch_is_up_to_date = discord_core_folder == config.get_last_installed_discord_version(discord_edition)
+        is_last_patch_is_up_to_date = discord_core_folder == config.LAST_INSTALLED_DISCORD_VERSIONS[discord_edition]
         is_bd_injected_already = utils.is_bd_injected(discord_path, config.USE_BD_CI_RELEASES)
 
         if (
@@ -120,7 +112,7 @@ def main():
 
             if not is_last_patch_is_up_to_date:
                 logger.info(f"{discord_edition} was updated. Verifying injection patch...")
-                config.set_discord_version(discord_edition, discord_core_folder)
+                config.LAST_INSTALLED_DISCORD_VERSIONS[discord_edition] = discord_core_folder
                 config.dump_settings()
                 is_bd_injected_already = False
 

@@ -34,6 +34,17 @@ BD_CI_WORKFLOW_AUTHOR = "BetterDiscord CI"
 BD_CI_WORKFLOW_REPO = "BetterDiscord/BetterDiscord"
 BD_CI_WORKFLOWS_RUNS_URL = f"https://api.github.com/repos/{BD_CI_WORKFLOW_REPO}/actions/workflows/ci.yml/runs"
 
+DISCORD_PARENT_PATH_SETTING_KEYS = {
+    config.DiscordEdition.STABLE: "discord_installed_path",
+    config.DiscordEdition.CANARY: "discord_canary_installed_path",
+    config.DiscordEdition.PTB: "discord_ptb_installed_path",
+}
+LAST_INSTALLED_DISCORD_VERSION_SETTING_KEYS = {
+    config.DiscordEdition.STABLE: "last_installed_discord_version",
+    config.DiscordEdition.CANARY: "last_installed_discord_canary_version",
+    config.DiscordEdition.PTB: "last_installed_discord_ptb_version",
+}
+
 DISCORD_POSSIBLE_PATHS = {
     config.DiscordEdition.STABLE: [os.path.join(LOCALAPPDATA, "Discord")],
     config.DiscordEdition.CANARY: [os.path.join(LOCALAPPDATA, "DiscordCanary")],

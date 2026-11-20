@@ -9,12 +9,8 @@ GITHUB_TOKEN: Optional[str] = None
 WORKFLOW_RUNS_LIMIT: int = 5
 RERUN_DISCORD_EDITION: Optional[str] = config.DiscordEdition.STABLE.to_str()
 
-DISCORD_PARENT_PATH: Optional[str] = None
-DISCORD_CANARY_PARENT_PATH: Optional[str] = None
-DISCORD_PTB_PARENT_PATH: Optional[str] = None
-LAST_INSTALLED_DISCORD_VERSION: Optional[str] = None
-LAST_INSTALLED_DISCORD_CANARY_VERSION: Optional[str] = None
-LAST_INSTALLED_DISCORD_PTB_VERSION: Optional[str] = None
+DISCORD_PARENT_PATHS: dict[config.DiscordEdition, Optional[str]] = {edition: None for edition in config.DiscordEdition}
+LAST_INSTALLED_DISCORD_VERSIONS: dict[config.DiscordEdition, Optional[str]] = {edition: None for edition in config.DiscordEdition}
 
 LAST_INSTALLED_BD_VERSION: Optional[str] = None
 LAST_INSTALLED_BD_CI_VERSION: Optional[str] = None

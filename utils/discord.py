@@ -1,9 +1,12 @@
 import os
 import re
 import glob
+import json
 import time
 import logging
+import sqlite3
 import subprocess
+from pathlib import Path
 
 import psutil
 
@@ -24,9 +27,45 @@ def find_discord_path(edition: config.DiscordEdition) -> str | None:
     return None
 
 
+def read_installer_hosts(discord_parent_path: str) -> list[dict] | None:
+    installer_db_path = os.path.join(discord_parent_path, "installer.db")
+
+    if not os.path.exists(installer_db_path):
+        return None
+
+    try:
+        connection = sqlite3.connect(Path(installer_db_path).as_uri() + "?mode=ro", uri=True, timeout=5)
+
+        try:
+            rows = connection.execute("SELECT value FROM key_values WHERE key LIKE 'host/%'").fetchall()
+        finally:
+            connection.close()
+
+        return [host for (value,) in rows for host in json.loads(value)]
+    except (sqlite3.Error, ValueError, TypeError) as e:
+        logger.warning(f"Cannot read Discord installer database: {e}")
+        return None
+
+
+def get_installer_host_folder_name(host: dict) -> str:
+    return "app-" + ".".join(str(i) for i in host["host_version"]["version"])
+
+
 def get_latest_installed_discord_folder_name(discord_parent_path: str) -> str:
     if not os.path.exists(discord_parent_path):
         raise FileNotFoundError(f"Discord directory not found: {discord_parent_path}")
+
+    try:
+        installed_hosts = [
+            host for host in read_installer_hosts(discord_parent_path) or []
+            if host.get("install_state") == "Installed"
+            and os.path.isdir(os.path.join(discord_parent_path, get_installer_host_folder_name(host)))
+        ]
+    except (KeyError, TypeError):
+        installed_hosts = []
+
+    if installed_hosts:
+        return get_installer_host_folder_name(max(installed_hosts, key=lambda i: i["host_version"]["version"]))
 
     discord_versions = [i for i in os.listdir(discord_parent_path) if re.fullmatch(r"app-\d+(\.\d+)*", i)]
     if not discord_versions:

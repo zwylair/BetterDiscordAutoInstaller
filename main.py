@@ -25,7 +25,7 @@ def main():
     for edition in config.DISCORD_PARENT_PATHS:
         logger.info(f"Retrieving {edition} installation folder...")
 
-        if not config.DISCORD_PARENT_PATHS[edition]:
+        if not config.DISCORD_PARENT_PATHS[edition] or not os.path.exists(config.DISCORD_PARENT_PATHS[edition]):
             config.DISCORD_PARENT_PATHS[edition] = utils.find_discord_path(edition)
             found_new_paths = found_new_paths or bool(config.DISCORD_PARENT_PATHS[edition])
 

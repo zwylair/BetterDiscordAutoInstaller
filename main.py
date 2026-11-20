@@ -116,14 +116,17 @@ def main():
                 config.dump_settings()
                 is_bd_injected_already = False
 
-            if not is_bd_injected_already:
-                logger.info(f"Verifying BetterDiscord {bd_release_tag} injection patch.")
-                utils.inject_patch(discord_path, config.USE_BD_CI_RELEASES)
-
             if bd_has_updates:
                 logger.info(f"BetterDiscord {bd_release_tag} has a new version, updating asar only.")
                 utils.update_bd_asar_only(config.USE_BD_CI_RELEASES)
                 bd_has_updates = False
+
+            if not is_bd_injected_already:
+                if os.path.exists(utils.get_asar_path(config.USE_BD_CI_RELEASES)):
+                    logger.info(f"Verifying BetterDiscord {bd_release_tag} injection patch.")
+                    utils.inject_patch(discord_path, config.USE_BD_CI_RELEASES)
+                else:
+                    logger.error(f"BetterDiscord {bd_release_tag} asar is missing, Discord would not start with the patch. Skipping it.")
 
             if was_discord_running or discord_edition.to_str() == config.RERUN_DISCORD_EDITION:
                 logger.info("")

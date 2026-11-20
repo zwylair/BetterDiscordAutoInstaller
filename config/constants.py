@@ -23,6 +23,7 @@ SETTINGS_PATH = os.path.join(BDAI_ROOT_PATH, "settings.json")
 
 DISCORD_UPDATE_WAIT_TIMEOUT = 300
 DISCORD_UPDATER_LOG_IDLE_TIMEOUT = 30
+DISCORD_CRASH_CHECK_DELAY = 15
 
 BD_LATEST_RELEASE_PAGE_URL = "https://github.com/rauenzi/BetterDiscordApp/releases/latest"
 BD_RELEASE_API_URL = "https://api.github.com/repos/rauenzi/BetterDiscordApp/releases/latest"

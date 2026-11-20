@@ -143,6 +143,21 @@ def inject_patch(discord_path: str, is_ci: bool):
     logger.info(f"Patched {index_js_path} to include BetterDiscord {release_tag}.")
 
 
+def remove_patch(discord_path: str, is_ci: bool):
+    index_js_path = utils.find_core_index_path(discord_path)
+
+    if not index_js_path:
+        return
+
+    with open(index_js_path, "r", encoding="utf-8") as f:
+        content = f.readlines()
+
+    with open(index_js_path, "w", encoding="utf-8") as f:
+        f.writelines(utils.remove_item_from_list(get_require_line(is_ci), content))
+
+    logger.info(f"Removed BetterDiscord {get_release_tag(is_ci)} from {index_js_path}.")
+
+
 def fetch_latest_bd_release() -> str | None:
     logger.info("Fetching latest BetterDiscord Stable version.")
     return utils.fetch_latest_release_tag(config.BD_LATEST_RELEASE_PAGE_URL)

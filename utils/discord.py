@@ -9,6 +9,8 @@ import subprocess
 from pathlib import Path
 
 import psutil
+import win32gui
+import win32process
 
 import config
 
@@ -129,6 +131,28 @@ def is_discord_running(edition: config.DiscordEdition) -> bool:
         if process.info.get("name") == executable_name:
             return True
     return False
+
+
+def has_discord_failed_to_start(edition: config.DiscordEdition) -> bool:
+    executable_name = edition.to_str() + ".exe"
+    discord_pids = {process.pid for process in psutil.process_iter(["name"]) if process.info.get("name") == executable_name}
+
+    if not discord_pids:
+        return True
+
+    error_dialogs = []
+
+    def collect_error_dialog(hwnd, _):
+        if (
+                win32gui.IsWindowVisible(hwnd)
+                and win32gui.GetClassName(hwnd) == "#32770"
+                and win32gui.GetWindowText(hwnd).lower() == edition.to_str().lower()
+                and win32process.GetWindowThreadProcessId(hwnd)[1] in discord_pids
+        ):
+            error_dialogs.append(hwnd)
+
+    win32gui.EnumWindows(collect_error_dialog, None)
+    return bool(error_dialogs)
 
 
 def is_discord_updating(edition: config.DiscordEdition, discord_parent_path: str) -> bool:

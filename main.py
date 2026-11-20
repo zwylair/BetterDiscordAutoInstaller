@@ -131,6 +131,18 @@ def main():
                 logger.info("")
                 logger.info(f"Restarting {discord_edition}...")
                 utils.start_discord(discord_edition, discord_parent_path)
+                time.sleep(config.DISCORD_CRASH_CHECK_DELAY)
+
+                if utils.has_discord_failed_to_start(discord_edition) and utils.is_bd_injected(discord_path, config.USE_BD_CI_RELEASES):
+                    logger.error(f"{discord_edition} failed to start with BetterDiscord {bd_release_tag}. Removing the patch so that Discord can start.")
+                    utils.kill_discord(discord_edition)
+                    time.sleep(2)
+                    utils.remove_patch(discord_path, config.USE_BD_CI_RELEASES)
+                    config.LAST_INSTALLED_DISCORD_VERSIONS[discord_edition] = None
+                    config.LAST_INSTALLED_BD_VERSION = None
+                    config.LAST_INSTALLED_BD_CI_VERSION = None
+                    config.dump_settings()
+                    utils.start_discord(discord_edition, discord_parent_path)
         else:
             logger.info(f"BetterDiscord {bd_release_tag} ({discord_edition}) is up to date and injected. No action needed.")
         logger.info("")

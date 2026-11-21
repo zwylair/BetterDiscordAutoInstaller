@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import shutil
 import zipfile
@@ -6,6 +7,7 @@ import logging
 import subprocess
 
 import requests
+import winshell
 
 import config
 from utils import backslash_path, is_version_greater, check_for_bdai_updates, fetch_latest_release_tag
@@ -55,17 +57,19 @@ def download_file(url: str, save_path: str):
         sys.exit(1)
 
 
-def clean_folder(path: str, exclude_files: tuple = ()):
-    for file in os.listdir(path):
-        if file in exclude_files:
-            continue
+def get_installed_bdai_versions() -> list[str]:
+    return [
+        i for i in os.listdir(config.BDAI_ROOT_PATH)
+        if re.fullmatch(r"v\d+(\.\d+)*", i) and os.path.isfile(os.path.join(config.BDAI_ROOT_PATH, i, "main.exe"))
+    ]
 
-        file_path = os.path.abspath(os.path.join(path, file))
 
+def remove_old_bdai_versions():
+    for version_dir in get_installed_bdai_versions():
         try:
-            os.remove(file_path) if os.path.isfile(file_path) else shutil.rmtree(file_path)
+            winshell.delete_file(os.path.join(config.BDAI_ROOT_PATH, version_dir), allow_undo=True, no_confirm=True, silent=True)
         except Exception as e:
-            logger.error(f"An error occurred while cleaning the {path}: {e}")
+            logger.error(f"An error occurred while removing {version_dir}: {e}")
 
 
 def extract_zip(zip_instance: zipfile.ZipFile, target_directory: str, exclude_files: tuple[str, ...] = ()):
@@ -98,10 +102,7 @@ def run_bdai():
     logger.info("Running BDAI...")
 
     if getattr(sys, "frozen", False):
-        all_bdai_dirs = [
-            i.lstrip("v") for i in os.listdir(config.BDAI_ROOT_PATH)
-            if i.startswith("v") and "main.exe" in os.listdir(os.path.join(config.BDAI_ROOT_PATH, i))
-        ]
+        all_bdai_dirs = [i.lstrip("v") for i in get_installed_bdai_versions()]
         greatest_version = "0"
 
         if not all_bdai_dirs:
@@ -212,9 +213,9 @@ def main():
         logger.error(f"Cannot open the update package ({save_path}): {e}. The installed version is left untouched.")
         sys.exit(1)
 
-    if is_frozen and os.path.exists(extract_directory):
-        logger.info("Clearing target directory...")
-        clean_folder(extract_directory, exclude_files=("updater.old.exe", "settings.json", "github_token", os.path.basename(save_path), "updater.log"))
+    if is_frozen:
+        logger.info("Moving old BDAI versions to the recycle bin...")
+        remove_old_bdai_versions()
 
     logger.info("Unpacking...")
     extract_zip(update_package, extract_directory)

@@ -29,6 +29,9 @@ def main():
             config.DISCORD_PARENT_PATHS[edition] = utils.find_discord_path(edition)
             found_new_paths = found_new_paths or bool(config.DISCORD_PARENT_PATHS[edition])
 
+        if not config.DISCORD_PARENT_PATHS[edition]:
+            logger.info(f"{edition} is not installed.")
+
     if not any(config.DISCORD_PARENT_PATHS.values()):
         logger.error("No any valid Discord installation found.")
         logger.info("Enter the path to your Discord Stable installation")
@@ -63,11 +66,12 @@ def main():
             logger.info("")
 
             # wipe logs, because discord doesn't do that after every updater run
-            try:
-                with open(utils.get_log_file_path(discord_edition), "w") as f:
-                    f.write("")
-            except OSError as e:
-                logger.warning(f"Cannot wipe {discord_edition} updater log: {e}")
+            if os.path.exists(utils.get_log_file_path(discord_edition)):
+                try:
+                    with open(utils.get_log_file_path(discord_edition), "w") as f:
+                        f.write("")
+                except OSError as e:
+                    logger.warning(f"Cannot wipe {discord_edition} updater log: {e}")
 
             logger.info(f"{discord_edition} is not running. Starting updater.")
             utils.start_discord(discord_edition, discord_parent_path)

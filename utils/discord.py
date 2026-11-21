@@ -24,7 +24,7 @@ def get_log_file_path(edition: config.DiscordEdition) -> str:
 
 def find_discord_path(edition: config.DiscordEdition) -> str | None:
     for path in config.DISCORD_POSSIBLE_PATHS.get(edition):
-        if os.path.exists(path) and any(i.startswith("app-") for i in os.listdir(path)):
+        if os.path.exists(os.path.join(path, "Update.exe")) and any(i.startswith("app-") for i in os.listdir(path)):
             return path
     return None
 
@@ -177,6 +177,6 @@ def is_discord_updating(edition: config.DiscordEdition, discord_parent_path: str
     except PermissionError as e:
         logger.error("Cannot read log file.", exc_info=e)
         return False
-    except FileNotFoundError as e:
-        logger.error("Log file not found.", exc_info=e)
+    except FileNotFoundError:
+        logger.info(f"{edition} updater log not found, not waiting for the update.")
         return False
